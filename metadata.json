@@ -2,5 +2,6 @@
   "owner": "appleboy",
   "name": "ssh-action",
   "visibility": "public",
-  "description": "GitHub Actions for executing remote ssh commands."
+  "description": "GitHub Actions for executing remote ssh commands.",
+  "block_publish": false
 }
