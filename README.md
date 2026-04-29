@@ -1,6 +1,12 @@
 # appleboy/ssh-action
 
-Hardened GitHub Action by [Chainguard](https://www.chainguard.dev).
+Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/appleboy/ssh-action](https://github.com/appleboy/ssh-action).
+
+## Versions
+
+| Version | Tag | Upstream commit |
+|---------|-----|-----------------|
+| v1.2.5 | [`v1.2.5`](https://github.com/chainguard-actions/ssh-action/tree/v1.2.5) | — |
 
 ## Privacy
 
