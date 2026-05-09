@@ -1,4 +1,6 @@
 {
-  "upstream": "appleboy/ssh-action",
-  "version": "v1.2.5"
+  "owner": "appleboy",
+  "repo": "ssh-action",
+  "version": "",
+  "url": "https://github.com/appleboy/ssh-action"
 }
