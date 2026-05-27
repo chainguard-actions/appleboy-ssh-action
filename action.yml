@@ -94,7 +94,9 @@ runs:
   using: "composite"
   steps:
     - name: Set GitHub Path
-      run: echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH
+      run: |
+        safe=$(printf '%s' "$GITHUB_ACTION_PATH" | tr -d '\n\r')
+        echo "$safe" >> $GITHUB_PATH
       shell: bash
       env:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
