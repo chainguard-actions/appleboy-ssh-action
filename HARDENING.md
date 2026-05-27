@@ -14,11 +14,11 @@ Action **appleboy--ssh-action/v1.2.5** was hardened automatically. 1 finding(s) 
 
 ### github-env-injection (severity: high)
 
-The 'Set GitHub Path' step writes the value of $GITHUB_ACTION_PATH (sourced from the attacker-influenced expression `${{ github.action_path }}` via an env: variable) directly to $GITHUB_PATH without the required sanitization step (`printf '%s' "$VAR" | tr -d '\n\r'`). Per the check specification, all `github.*` context values are considered attacker-controlled. A malicious value containing newline characters could inject arbitrary entries into $GITHUB_PATH, potentially hijacking subsequent command lookups. The safe pattern requires sanitizing the value before writing: `safe=$(printf '%s' "$GITHUB_ACTION_PATH" | tr -d '\n\r'); echo "$safe" >> $GITHUB_PATH`.
+The 'Set GitHub Path' step in action.yml writes the value of `${{ github.action_path }}` (a github.* context value) to `$GITHUB_PATH` via an intermediate env var `GITHUB_ACTION_PATH`, without applying the required sanitization (`printf '%s' "$VAR" | tr -d '\n\r'`) before the write. A malicious value containing newline characters in `github.action_path` could inject arbitrary entries into the runner's PATH. The failing pattern is: `run: echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH` with `env: GITHUB_ACTION_PATH: ${{ github.action_path }}`.
 
 Locations:
 
-- `action.yml:98`
+- `action.yml:86`
 
 ## Iteration Notes
 
@@ -28,5 +28,5 @@ Locations:
 
 **Notes:**
 
-Fixed the 'Set GitHub Path' step in action.yml to sanitize the GITHUB_ACTION_PATH value before writing to $GITHUB_PATH. Changed the single-line `echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH` to a multi-line script that first strips newline/carriage return characters using `safe=$(printf '%s' "$GITHUB_ACTION_PATH" | tr -d '\n\r')` and then writes the sanitized value with `echo "$safe" >> $GITHUB_PATH`. This prevents an attacker from injecting arbitrary entries into $GITHUB_PATH via newline characters in the github.action_path context value.
+Fixed the 'Set GitHub Path' step in action.yml (line 86). The step previously wrote `$GITHUB_ACTION_PATH` (from `${{ github.action_path }}`) directly to `$GITHUB_PATH` without sanitization. The fix adds newline/carriage-return stripping using `safe=$(printf '%s' "$GITHUB_ACTION_PATH" | tr -d '\n\r')` before writing `$safe` to `"$GITHUB_PATH"`, preventing PATH injection via embedded newline characters.
 
