@@ -1,6 +1,6 @@
 # appleboy/ssh-action
 
-GitHub Actions for executing remote ssh commands.
+Executing remote ssh commands
 
 Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/appleboy/ssh-action](https://github.com/appleboy/ssh-action).
 
