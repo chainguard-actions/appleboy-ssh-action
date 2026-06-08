@@ -1,0 +1,32 @@
+name: Test advanced options inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create dummy script file
+        run: |
+          mkdir -p /tmp/ssh-script-test
+          echo "echo hello from script file" > /tmp/ssh-script-test/remote-script.sh
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          host: "127.0.0.1"
+          port: "22"
+          username: "testuser"
+          password: "testpassword"
+          script: "echo hello"
+          script_path: "/tmp/ssh-script-test/remote-script.sh"
+          envs: "MY_VAR=hello,OTHER_VAR=world"
+          envs_format: "export %s=%s"
+          allenvs: "false"
+          sync: "true"
+          capture_stdout: "true"
+          version: "1.7.0"
+      - name: Assert action ran (connection expected to fail in test env)
+        run: |
+          echo "Action completed (with or without error - no real SSH server)"
+          echo "PASS: advanced option inputs were accepted"

@@ -14,11 +14,11 @@ Action **appleboy--ssh-action/v1.2.5** was hardened automatically. 1 finding(s) 
 
 ### github-env-injection (severity: high)
 
-The 'Set GitHub Path' step in action.yml writes the value of `${{ github.action_path }}` (a github.* context value) to `$GITHUB_PATH` via an intermediate env var `GITHUB_ACTION_PATH`, without applying the required sanitization (`printf '%s' "$VAR" | tr -d '\n\r'`) before the write. A malicious value containing newline characters in `github.action_path` could inject arbitrary entries into the runner's PATH. The failing pattern is: `run: echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH` with `env: GITHUB_ACTION_PATH: ${{ github.action_path }}`.
+The 'Set GitHub Path' step writes the value of $GITHUB_ACTION_PATH (sourced from the attacker-controllable expression `${{ github.action_path }}` via an env: variable) directly to $GITHUB_PATH using `echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH`, without the required sanitization step (`printf '%s' ... | tr -d '\n\r'`) applied before the write. A newline-injection in this value could allow an attacker to inject arbitrary entries into the runner's PATH.
 
 Locations:
 
-- `action.yml:86`
+- `action.yml:100`
 
 ## Iteration Notes
 
@@ -28,5 +28,5 @@ Locations:
 
 **Notes:**
 
-Fixed the 'Set GitHub Path' step in action.yml (line 86). The step previously wrote `$GITHUB_ACTION_PATH` (from `${{ github.action_path }}`) directly to `$GITHUB_PATH` without sanitization. The fix adds newline/carriage-return stripping using `safe=$(printf '%s' "$GITHUB_ACTION_PATH" | tr -d '\n\r')` before writing `$safe` to `"$GITHUB_PATH"`, preventing PATH injection via embedded newline characters.
+Fixed the 'Set GitHub Path' step in action.yml (line 100) to sanitize the GITHUB_ACTION_PATH value before writing to $GITHUB_PATH. Changed from a direct `echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH` to a two-step approach: first strip newlines/carriage returns with `safe=$(printf '%s' "$GITHUB_ACTION_PATH" | tr -d '\n\r')`, then write the sanitized value with `echo "$safe" >> "$GITHUB_PATH"`. This prevents newline injection attacks that could allow an attacker to inject arbitrary entries into the runner's PATH.
 
