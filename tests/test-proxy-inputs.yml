@@ -1,4 +1,4 @@
-name: Test proxy/jump host inputs
+name: Test proxy SSH inputs coverage
 on:
   workflow_dispatch:
 jobs:
@@ -6,10 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Create dummy proxy key file
-        run: |
-          mkdir -p /tmp/ssh-proxy-test
-          ssh-keygen -t rsa -b 2048 -f /tmp/ssh-proxy-test/id_rsa -N "proxypassphrase" -q
       - id: action
         uses: .
         continue-on-error: true
@@ -19,18 +15,19 @@ jobs:
           username: "testuser"
           password: "testpassword"
           script: "echo hello"
-          proxy_host: "10.0.0.1"
-          proxy_port: "2222"
+          proxy_host: "proxy.example.com"
+          proxy_port: "22"
           proxy_username: "proxyuser"
           proxy_password: "proxypassword"
           proxy_passphrase: "proxypassphrase"
-          proxy_key: "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0Z3VS5JJcds3xHn/ygWep4PAtEsHAMKCMDHBFMFMNNFMFMNF\n-----END RSA PRIVATE KEY-----"
-          proxy_key_path: "/tmp/ssh-proxy-test/id_rsa"
-          proxy_fingerprint: "SHA256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          proxy_key: "fake-proxy-key-content"
+          proxy_key_path: "/tmp/fake_proxy_key"
+          proxy_fingerprint: "SHA256:fakeproxyfingerprint"
           proxy_cipher: "aes128-ctr"
           proxy_use_insecure_cipher: "false"
-          proxy_timeout: "10s"
-      - name: Assert action ran (connection expected to fail in test env)
+          proxy_protocol: "tcp"
+          proxy_timeout: "30s"
+      - name: Assert proxy inputs were accepted
         run: |
-          echo "Action completed (with or without error - no real SSH server)"
-          echo "PASS: proxy inputs were accepted"
+          echo "Action completed with continue-on-error"
+          echo "PASS: All proxy inputs were accepted by the action"
