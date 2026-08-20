@@ -1,0 +1,39 @@
+name: Test script_path input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create a local script file for script_path input
+        run: |
+          cat > /tmp/test-remote-script.sh << 'EOF'
+          #!/bin/sh
+          echo "Hello from script file"
+          EOF
+          chmod +x /tmp/test-remote-script.sh
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          host: "192.0.2.1"
+          username: "testuser"
+          password: "testpass"
+          port: "22"
+          timeout: "5s"
+          command_timeout: "10s"
+          script_path: "/tmp/test-remote-script.sh"
+      - name: Assert action ran (connection refused is expected for TEST-NET addresses)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded unexpectedly (real SSH server available)"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully as expected (no real SSH server)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

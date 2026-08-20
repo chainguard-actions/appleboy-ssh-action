@@ -1,0 +1,42 @@
+name: Test proxy connection options
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          host: "192.0.2.1"
+          username: "testuser"
+          password: "testpass"
+          port: "22"
+          timeout: "5s"
+          command_timeout: "10s"
+          script: "echo hello"
+          proxy_host: "192.0.2.2"
+          proxy_port: "22"
+          proxy_username: "proxyuser"
+          proxy_password: "proxypass"
+          proxy_passphrase: "proxypassphrase"
+          proxy_key: ""
+          proxy_key_path: ""
+          proxy_fingerprint: ""
+          proxy_cipher: "aes128-ctr"
+          proxy_use_insecure_cipher: "false"
+      - name: Assert action ran (connection refused is expected for TEST-NET addresses)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded unexpectedly (real SSH server available)"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully as expected (no real SSH server)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

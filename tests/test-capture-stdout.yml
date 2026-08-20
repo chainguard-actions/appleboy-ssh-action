@@ -1,0 +1,75 @@
+name: Test SSH capture_stdout output
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up SSH server and key-based auth
+        run: |
+          # Install openssh-server
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq openssh-server
+
+          # Create test user
+          sudo useradd -m -s /bin/bash sshuser || true
+
+          # Generate SSH key pair
+          ssh-keygen -t ed25519 -f /tmp/test_ssh_key -N "" -q
+
+          # Set up authorized_keys for sshuser
+          sudo mkdir -p /home/sshuser/.ssh
+          sudo cp /tmp/test_ssh_key.pub /home/sshuser/.ssh/authorized_keys
+          sudo chown -R sshuser:sshuser /home/sshuser/.ssh
+          sudo chmod 700 /home/sshuser/.ssh
+          sudo chmod 600 /home/sshuser/.ssh/authorized_keys
+
+          # Start sshd on port 2222
+          sudo mkdir -p /run/sshd
+          sudo ssh-keygen -A
+          sudo /usr/sbin/sshd -p 2222 -o "PubkeyAuthentication=yes" -o "PasswordAuthentication=no"
+
+          # Wait for sshd to be ready
+          for i in $(seq 1 10); do
+            if nc -z 127.0.0.1 2222; then
+              echo "SSH server is ready"
+              break
+            fi
+            sleep 1
+          done
+
+          # Store private key content for use in action
+          echo "SSH_PRIVATE_KEY<<EOF" >> $GITHUB_ENV
+          cat /tmp/test_ssh_key >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - id: action
+        name: Run SSH command with capture_stdout
+        uses: .
+        with:
+          host: "127.0.0.1"
+          port: "2222"
+          username: "sshuser"
+          key: ${{ env.SSH_PRIVATE_KEY }}
+          script: "echo captured_output_value"
+          timeout: "10s"
+          command_timeout: "30s"
+          capture_stdout: "true"
+
+      - name: Assert stdout output captured
+        env:
+          STDOUT: ${{ steps.action.outputs.stdout }}
+        run: |
+          echo "stdout: $STDOUT"
+          if [ -z "$STDOUT" ]; then
+            echo "FAIL: expected stdout output but got empty string"
+            exit 1
+          fi
+          if ! echo "$STDOUT" | grep -q "captured_output_value"; then
+            echo "FAIL: expected 'captured_output_value' in stdout but got: $STDOUT"
+            exit 1
+          fi
+          echo "PASS: stdout captured correctly"

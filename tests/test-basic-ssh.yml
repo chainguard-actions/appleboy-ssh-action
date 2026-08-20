@@ -1,0 +1,60 @@
+name: Test basic SSH connection
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up SSH server on localhost
+        run: |
+          # Install openssh-server
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq openssh-server
+
+          # Create test user
+          sudo useradd -m -s /bin/bash testuser || true
+          echo "testuser:testpassword" | sudo chpasswd
+
+          # Configure sshd to allow password auth and listen on port 2222
+          sudo mkdir -p /run/sshd
+          sudo ssh-keygen -A
+
+          # Write a custom sshd config
+          sudo tee /etc/ssh/sshd_config.d/test.conf > /dev/null <<'EOF'
+          Port 2222
+          PasswordAuthentication yes
+          PermitRootLogin no
+          PubkeyAuthentication yes
+          EOF
+
+          # Start sshd
+          sudo /usr/sbin/sshd -p 2222 -o "PasswordAuthentication=yes" -o "PubkeyAuthentication=yes" -o "PermitRootLogin=no"
+
+          # Wait for sshd to be ready
+          for i in $(seq 1 10); do
+            if nc -z 127.0.0.1 2222; then
+              echo "SSH server is ready"
+              break
+            fi
+            sleep 1
+          done
+
+      - id: action
+        name: Run SSH command on localhost
+        uses: .
+        with:
+          host: "127.0.0.1"
+          port: "2222"
+          username: "testuser"
+          password: "testpassword"
+          script: "echo hello_from_ssh"
+          timeout: "10s"
+          command_timeout: "30s"
+
+      - name: Assert action succeeded
+        run: |
+          echo "SSH action completed successfully"
+          echo "PASS"
