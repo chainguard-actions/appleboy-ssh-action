@@ -6,9 +6,9 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 ## Versions
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v1.2.5 | [`v1.2.5`](https://github.com/chainguard-actions/appleboy-ssh-action/tree/v1.2.5) | [`0ff4204`](https://github.com/appleboy/ssh-action/commit/0ff4204d59e8e51228ff73bce53f80d53301dee2) |
+| Version | Tag | Upstream commit | Hardening report |
+|---------|-----|-----------------|------------------|
+| v1.2.5 | [`v1.2.5`](https://github.com/chainguard-actions/appleboy-ssh-action/tree/v1.2.5) | [`0ff4204`](https://github.com/appleboy/ssh-action/commit/0ff4204d59e8e51228ff73bce53f80d53301dee2) | [`HARDENING.md`](https://github.com/chainguard-actions/appleboy-ssh-action/blob/v1.2.5/HARDENING.md) |
 
 ## Privacy
 
