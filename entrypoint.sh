@@ -71,9 +71,10 @@ if ! "${TARGET}" --version; then
 fi
 echo "======================================="
 if [[ "${INPUT_CAPTURE_STDOUT}" == 'true' ]]; then
-  echo 'stdout<<EOF' >> "${GITHUB_OUTPUT}"
+  EOF_DELIM="EOF_$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')"
+  echo "stdout<<${EOF_DELIM}" >> "${GITHUB_OUTPUT}"
   "${TARGET}" "$@" | tee -a "${GITHUB_OUTPUT}"
-  echo 'EOF' >> "${GITHUB_OUTPUT}"
+  echo "${EOF_DELIM}" >> "${GITHUB_OUTPUT}"
 else
   "${TARGET}" "$@"
 fi
